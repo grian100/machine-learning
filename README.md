@@ -10,5 +10,11 @@ Il progetto si sviluppa cercando di implementare un modello di regressione predi
 - <strong>Seaborn 0.13.2</strong> è una libreria Python per la visualizzazione di dati basata su matplotlib . Fornisce un'interfaccia di alto livello per disegnare grafici statistici accattivanti e informativi
 
 # Obiettivi del progetto
+L'obiettivo è di sviluppare un modello di regressione che utilizzando i dati clinici disponibili, riesca a prevedere la progressione della malattia per ciascun paziente. La soluzione sarà integrata nei sistemi aziendali di gestione sanitaria per fornire previsioni personalizzate e dati predittivi ai medici, aiutandoli a prendere decisioni più informate. I vantaggi attesi riguardano:
+  - <strong>Miglioramento della cura personalizzata</strong>: I medici saranno in grado di prevedere la progressione del diabete nei pazienti e adattare i piani di trattamento in anticipo.
+  - <strong>Riduzione dei costi sanitari</strong>: Prevedendo con maggiore accuratezza l'evoluzione della malattia, è possibile evitare complicazioni a lungo termine che richiederebbero interventi più costosi.
+  - <strong>Integrazione in piattaforme sanitarie</strong>: Il modello sarà parte integrante di una piattaforma di monitoraggio dei pazienti, migliorando la gestione a lungo termine e l'efficacia dei trattamenti.
+  - <strong>Strumento di supporto decisionale</strong>: Fornire previsioni precise permette ai medici di prendere decisioni più informate, basate su dati clinici storici e attuali.
 
 # Repository
+## Passaggi per la realizzazione del Modello
