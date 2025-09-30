@@ -31,5 +31,14 @@ Il dataset scelto per questo progetto è il Diabetes dataset fornito da scikit-l
     
 Il target è una misura quantitativa che riflette la progressione del diabete.
 
+# Passaggi per la realizzazione del Modello
+  - Caricamento del Dataset: il dataset sarà caricato utilizzando la funzione load_diabetes della libreria scikit-learn. Questo permetterà di accedere rapidamente ai dati necessari per il training del modello
+  - Analisi Esplorativa dei Dati (EDA): verrà eseguita una prima esplorazione delle variabili per comprendere meglio le correlazioni tra di esse e il target. Verranno utilizzate visualizzazioni come scatter plot e heatmap per identificare eventuali pattern e relazioni tra variabili come BMI, BP, e S5, che potrebbero avere una maggiore influenza sulla progressione del diabete
+  - Pulizia e Pre-processing dei Dati: Verranno affrontati eventuali valori mancanti o anomalie nei dati. Le variabili numeriche saranno standardizzate per garantire che abbiano la stessa scala, mentre le variabili categoriche, come il genere, verranno codificate usando tecniche di encoding
+  - Selezione delle Variabili: la selezione delle variabili è cruciale per migliorare la precisione del modello e ridurre la complessità computazionale. Tecniche come l'analisi della correlazione e la Regressione Lasso saranno utilizzate per identificare le variabili più influenti sulla progressione del diabete
+  - Creazione del Modello di Regressione: una volta selezionate le variabili più rilevanti, si procederà alla creazione del modello di regressione
+  - Valutazione del Modello: il modello finale sarà valutato utilizzando metriche di regressione come il Mean Squared Error (MSE) e il R-squared (R²). Le prestazioni del modello saranno confrontate con modelli di base per assicurarsi che il sistema offra un significativo miglioramento
+  - Esportazione del Modello: una volta ottenuto il modello ottimale, verrà esportato utilizzando pickle per essere integrato nella piattaforma sanitaria di MedPredict, pronta per l'utilizzo in un contesto clinico reale
+
 # Repository
-  - Passaggi per la realizzazione del Modello
+MACHINE-LEARNIG_PROJECT/
