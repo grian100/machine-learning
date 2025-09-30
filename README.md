@@ -42,3 +42,18 @@ Il target è una misura quantitativa che riflette la progressione del diabete.
 
 # Repository
 MACHINE-LEARNIG_PROJECT/
+  - README.md
+  - src/
+    - caricamento del dataset
+    - analisi esplorativa
+      - scatterplot/
+        - scatterplot-field.png #prime realzioni tra le feauters e il target
+      - lineplot/
+        - lineplot-field.png #confronto tra le feauters e l'età dei pazienti
+    - pulizia e pre-processing
+      -  heatmap/
+          - heatmap-features.png #mappa di calore per visualizzare la correlazone numerica delle variabili
+    - analisi delle variabili
+    - creazione del modello di regressione
+    - valutazione del modello
+    - esportazione del modello
