@@ -51,9 +51,9 @@ MACHINE-LEARNIG_PROJECT/
       - lineplot/
         - lineplot-field.png #confronto tra le feauters e l'età dei pazienti
     - pulizia e pre-processing
-      -  heatmap/
-          - heatmap-features.png #mappa di calore per visualizzare la correlazone numerica delle variabili
     - analisi delle variabili
+       -  heatmap/
+          - heatmap-features.png #mappa di calore per visualizzare la correlazone numerica delle variabili
     - creazione del modello di regressione
     - valutazione del modello
     - esportazione del modello
