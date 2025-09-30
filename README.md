@@ -16,5 +16,20 @@ L'obiettivo è di sviluppare un modello di regressione che utilizzando i dati cl
   - <strong>Integrazione in piattaforme sanitarie</strong>: Il modello sarà parte integrante di una piattaforma di monitoraggio dei pazienti, migliorando la gestione a lungo termine e l'efficacia dei trattamenti.
   - <strong>Strumento di supporto decisionale</strong>: Fornire previsioni precise permette ai medici di prendere decisioni più informate, basate su dati clinici storici e attuali.
 
+# Descrizione del dataset
+Il dataset scelto per questo progetto è il Diabetes dataset fornito da scikit-learn, che contiene informazioni cliniche su pazienti affetti da diabete e un target che rappresenta la progressione della malattia. Le variabili indipendenti includono parametri come:
+  - Age: età del paziente
+  - Sex: genere
+  - BMI: indice di massa corporea
+  - BP: pressione sanguigna media
+  - S1: colesterolo sierico totale
+  - S2: lipoproteine a bassa densità
+  - S3: lipoproteine ad alta densità
+  - S4: rapporto tra colesterolo totale e HDL
+  - S5: trigliceridi
+  - S6: livello di glicemia
+    
+Il target è una misura quantitativa che riflette la progressione del diabete.
+
 # Repository
-## Passaggi per la realizzazione del Modello
+  - Passaggi per la realizzazione del Modello
