@@ -38,20 +38,19 @@ Per la realizzazione del progetto di analisi si procede con la valutazione delle
 # Repository
 MACHINE-LEARNIG_PROJECT/
   - README.md
-  - src/
-    - caricamento del dataset
-    - analisi esplorativa
-      - scatterplot/
-        - scatterplot-field.png #prime realzioni tra le feauters e il target
-      - lineplot/
-        - lineplot-field.png #confronto tra le feauters e l'età dei pazienti
-    - pulizia e pre-processing
-    - analisi delle variabili
-       -  heatmap/
+  - caricamento del dataset
+  - analisi esplorativa
+    - scatterplot/
+      - scatterplot-field.png #prime realzioni tra le feauters e il target
+    - lineplot/
+      - lineplot-field.png #confronto tra le feauters e l'età dei pazienti
+  - pulizia e pre-processing
+  - analisi delle variabili
+      -  heatmap/
           - heatmap-features.png #mappa di calore per visualizzare la correlazone numerica delle variabili
-    - creazione del modello di regressione
-    - valutazione del modello
-    - esportazione del modello
+  - creazione del modello di regressione
+  - valutazione del modello
+  - esportazione del modello
 
 # Workflow
 1. Caricamento del Dataset
