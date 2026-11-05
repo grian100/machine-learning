@@ -8,7 +8,7 @@ Il progetto sviluppa un modello di regressione che, a partire dai dati clinici d
 - <strong>Numpy==2.3.3</strong> offre funzioni matematiche complete, generatori di numeri casuali, routine di algebra lineare e molto altro
 - <strong>Matplotlib==3.10.6</strong> è una libreria completa per creare visualizzazioni statiche, animate e interattive
 - <strong>Seaborn==0.13.2</strong> è una libreria di visualizzazione basata su matplotlib, con un'interfaccia di alto livello per grafici statistici
-- <strong>Joblib</strong> per l'esportazione del modello, <strong>pytest</strong> per i test e <strong>JupyterLab</strong> per il notebook dei risultati
+- <strong>FastAPI</strong> e <strong>Uvicorn</strong> per l'API REST, <strong>Joblib</strong> per l'esportazione del modello, <strong>pytest</strong> per i test e <strong>JupyterLab</strong> per il notebook dei risultati
 
 Il codice può essere eseguito in locale o su <strong>Google Colaboratory</strong> [https://colab.google/].
 
@@ -45,9 +45,11 @@ machine-learning/
 │   ├── data.py          # caricamento del dataset e split train/test riproducibile
 │   ├── models.py        # modelli candidati, ognuno come Pipeline (standardizzazione + regressore)
 │   ├── evaluation.py    # cross-validation, scelta del modello, metriche, intervallo di previsione
-│   └── export.py        # esportazione e caricamento del modello con i metadati, previsioni
+│   ├── export.py        # esportazione e caricamento del modello con i metadati, previsioni
+│   └── api.py           # API REST (FastAPI) per le previsioni
 ├── tests/
-│   └── test_diabetes.py
+│   ├── test_diabetes.py
+│   └── test_api.py
 ├── notebooks/
 │   └── risultati.ipynb  # notebook con tutti i risultati, grafici e conclusioni
 ├── models/
@@ -67,11 +69,46 @@ python eda.py                          # analisi esplorativa, grafici in reports
 python train.py                        # addestramento, valutazione ed esportazione in models/ (circa 2-3 minuti)
 python predict.py                      # previsione su 5 pazienti di esempio
 python predict.py --csv pazienti.csv   # previsione su un file con le colonne age, sex, bmi, bp, s1-s6
+uvicorn diabetes.api:app --app-dir src  # API REST su http://localhost:8000
 pytest                                 # test
 jupyter lab notebooks/risultati.ipynb  # notebook con i risultati
 ```
 
 Il notebook [`notebooks/risultati.ipynb`](notebooks/risultati.ipynb) è salvato già eseguito: grafici e tabelle si possono consultare direttamente su GitHub.
+
+# API REST
+Il modello esportato è disponibile anche come servizio web, così la piattaforma sanitaria può richiedere le previsioni via HTTP senza dipendere da Python:
+
+```bash
+uvicorn diabetes.api:app --app-dir src --host 0.0.0.0 --port 8000
+```
+
+La documentazione interattiva, generata automaticamente, è su `http://localhost:8000/docs`: permette di provare ogni endpoint dal browser.
+
+| Metodo | Endpoint | Descrizione |
+|---|---|---|
+| GET | `/health` | verifica che il servizio sia attivo |
+| GET | `/model` | modello in uso, variabili attese, intervalli di training, metriche, versioni |
+| POST | `/predict` | previsione per un paziente |
+| POST | `/predict/batch` | previsione per più pazienti (`{"pazienti": [...]}`, al massimo 1000) |
+
+Esempio:
+```bash
+curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d '{"age": 60, "sex": 1, "bmi": 32.5, "bp": 110, "s1": 210, "s2": 130, "s3": 38, "s4": 5.5, "s5": 5.3, "s6": 105}'
+```
+```json
+{"previsione": 233.06, "minimo": 144.16, "massimo": 325.06, "livello_intervallo": 0.9, "fuori_intervallo_training": []}
+```
+
+- I valori vanno inviati come nel dataset originale (non scalati), con `sex` codificato 0/1.
+- Le richieste con campi mancanti, tipi sbagliati o valori impossibili (per esempio un BMI di 5) vengono rifiutate con errore 422 e l'indicazione del campo non valido.
+- I valori plausibili ma fuori da quelli visti in addestramento vengono accettati e restituiti in `fuori_intervallo_training`: per quei pazienti la previsione è meno affidabile.
+
+Configurazione tramite variabili d'ambiente:
+- `DIABETES_MODEL_DIR`: cartella del modello (default `models/`). Il modello viene caricato una sola volta all'avvio.
+- `DIABETES_API_KEY`: se impostata, tutte le richieste tranne `/health` devono contenere l'header `X-API-Key` con questo valore, altrimenti ricevono errore 401.
+
+Trattandosi di dati sanitari, in produzione il servizio va esposto solo tramite HTTPS (per esempio dietro un reverse proxy) e con `DIABETES_API_KEY` impostata o un sistema di autenticazione della piattaforma. L'API non salva i dati dei pazienti: li usa solo per calcolare la previsione.
 
 # Workflow
 1. <strong>Caricamento del dataset e split</strong>: il dataset viene diviso subito in training set (80%) e test set (20%) con un seme fisso. Tutte le scelte (analisi esplorativa, selezione delle variabili, scelta del modello) usano solo il training set; il test set serve solo per la valutazione finale, così da evitare il data leakage.
