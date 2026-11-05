@@ -13,6 +13,7 @@ from datetime import date
 from pathlib import Path
 
 import joblib
+import numpy as np
 import pandas as pd
 import sklearn
 
@@ -34,6 +35,7 @@ def build_metadata(model_name, X_train, test_metrics, interval, cv_results=None)
         "versioni": {
             "python": platform.python_version(),
             "scikit-learn": sklearn.__version__,
+            "numpy": np.__version__,
             "pandas": pd.__version__,
         },
     }

@@ -50,6 +50,9 @@ machine-learning/
 │   └── test_diabetes.py
 ├── notebooks/
 │   └── risultati.ipynb  # notebook con tutti i risultati, grafici e conclusioni
+├── models/
+│   ├── diabetes_model.joblib  # modello esportato (pipeline completa)
+│   └── metadata.json          # variabili attese, intervalli di training, metriche, versioni
 ├── eda.py               # analisi esplorativa: scatterplot, lineplot, heatmap (in reports/)
 ├── train.py             # confronto dei modelli, valutazione ed esportazione (in models/)
 ├── predict.py           # previsione su nuovi pazienti con il modello esportato
@@ -122,5 +125,7 @@ L'intervallo di previsione al 90% va da −89 a +92 punti attorno alla prevision
 
 ### Limiti
 Le 10 variabili cliniche spiegano poco meno della metà della variabilità della progressione (R² circa 0.45–0.48), quindi l'incertezza delle singole previsioni è elevata. Il modello distingue in modo affidabile i pazienti a rischio basso, medio o alto, ma non prevede il valore esatto: va usato come <strong>supporto</strong> alla valutazione clinica, non come sostituto. `predict.py` segnala inoltre i pazienti con valori fuori dall'intervallo visto in addestramento, per i quali la previsione è meno affidabile.
+
+Il modello esportato è incluso nel repository in `models/`, pronto per l'integrazione: `predict.py` lo usa direttamente, senza bisogno di rieseguire `train.py`. Va caricato con la stessa versione di scikit-learn indicata in `metadata.json` (1.7.2): con versioni diverse `load_model` mostra un avviso, perché il formato interno dei modelli può cambiare tra una versione e l'altra. Rieseguendo `train.py` il modello viene ricreato e sovrascritto.
 
 Il file del modello va caricato solo da fonti fidate: come pickle, joblib può eseguire codice al caricamento.

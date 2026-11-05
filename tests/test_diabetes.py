@@ -130,3 +130,15 @@ def test_predict_checks_input(data, tmp_path):
     patient = X_test.head(1)[list(reversed(X_test.columns))].assign(bmi=80.0)
     result = predict_with_interval(loaded, metadata, patient)
     assert result["fuori_intervallo_training"].iloc[0] == "bmi"
+
+
+def test_committed_model():
+    """Il modello versionato in models/ si carica e coincide con quello prodotto da train.py."""
+    from pathlib import Path
+
+    directory = Path(__file__).resolve().parents[1] / "models"
+    model, metadata = load_model(directory)
+    X, y = load_dataset()
+    assert metadata["variabili"] == list(X.columns)
+    expected = clone(build_models()[metadata["modello"]]).fit(X, y)
+    np.testing.assert_allclose(model.predict(X), expected.predict(X), rtol=1e-6)
