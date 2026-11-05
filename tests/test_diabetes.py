@@ -7,9 +7,11 @@ from sklearn.base import clone
 from diabetes import (
     BASELINE,
     FEATURES,
+    TUNED_GB,
     build_metadata,
     build_models,
     cross_validate_models,
+    grid_search_table,
     interval_coverage,
     linear_coefficients,
     load_dataset,
@@ -20,6 +22,7 @@ from diabetes import (
     save_model,
     select_model,
     split_dataset,
+    tuned_gradient_boosting,
 )
 from diabetes.evaluation import make_cv
 
@@ -33,7 +36,7 @@ def data():
 @pytest.fixture(scope="module")
 def results(data):
     X_train, _, y_train, _ = data
-    models = {k: v for k, v in build_models().items() if k not in ("Random forest", "Gradient boosting")}
+    models = {k: v for k, v in build_models().items() if k not in ("Random forest", "Gradient boosting", TUNED_GB)}
     return cross_validate_models(models, X_train, y_train, cv=make_cv(n_splits=5))
 
 
@@ -56,6 +59,8 @@ def test_split_is_reproducible():
 def test_all_models_fit_and_predict(data):
     X_train, X_test, y_train, _ = data
     for name, model in build_models().items():
+        if name == TUNED_GB:
+            continue  # la ricerca completa è lenta: è verificata con una griglia ridotta più sotto
         prediction = clone(model).fit(X_train, y_train).predict(X_test)
         assert prediction.shape == (len(X_test),), name
         assert np.isfinite(prediction).all(), name
@@ -72,6 +77,21 @@ def test_unregularized_polynomial_overfits(results):
     # Sui dati di training sembra ottimo, in validazione è peggiore della baseline
     assert poly["R2 training"] > 0.8
     assert poly["R2"] < results.loc[BASELINE, "R2"]
+
+
+def test_tuned_gradient_boosting(data):
+    X_train, X_test, y_train, _ = data
+    grid = {"n_estimators": [50, 100], "max_depth": [1, 2], "learning_rate": [0.1]}
+    model = tuned_gradient_boosting(param_grid=grid, cv=3).fit(X_train, y_train)
+    search = model.named_steps["model"]
+    assert set(search.best_params_) == set(grid)
+    table = grid_search_table(model)
+    assert len(table) == 4
+    assert table["RMSE"].is_monotonic_increasing
+    assert table.iloc[0][["n_estimators", "max_depth"]].tolist() == [
+        search.best_params_["n_estimators"], search.best_params_["max_depth"]
+    ]
+    assert np.isfinite(model.predict(X_test)).all()
 
 
 def test_select_model(results):

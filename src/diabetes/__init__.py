@@ -7,4 +7,12 @@ from .evaluation import (
     select_model,
 )
 from .export import build_metadata, load_model, predict_with_interval, save_model
-from .models import BASELINE, build_models, linear_coefficients
+from .models import (
+    BASELINE,
+    GB_PARAM_GRID,
+    TUNED_GB,
+    build_models,
+    grid_search_table,
+    linear_coefficients,
+    tuned_gradient_boosting,
+)

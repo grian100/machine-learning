@@ -3,7 +3,8 @@
 Passaggi:
 1. split train/test (80/20, riproducibile);
 2. cross-validation a 10 fold di tutti i modelli sul training set;
-3. scelta del modello con la regola di una deviazione standard;
+3. scelta del modello con la regola di una deviazione standard (il gradient boosting ottimizzato
+   con GridSearchCV viene valutato con una nested cross-validation);
 4. valutazione sul test set, mai usato prima, e stima dell'intervallo di previsione;
 5. riaddestramento su tutti i dati ed esportazione in models/ (pipeline completa + metadati).
 """
@@ -20,9 +21,11 @@ from sklearn.base import clone
 from diabetes import (
     BASELINE,
     RANDOM_STATE,
+    TUNED_GB,
     build_metadata,
     build_models,
     cross_validate_models,
+    grid_search_table,
     interval_coverage,
     linear_coefficients,
     load_dataset,
@@ -64,10 +67,23 @@ def main():
     removed = list(coefficients[coefficients == 0].index)
     print(f"Variabili escluse dal Lasso: {removed or 'nessuna'}\n")
 
+    tuned = clone(models[TUNED_GB]).fit(X_train, y_train)
+    grid = grid_search_table(tuned)
+    grid.to_csv(REPORTS_DIR / "gridsearch_gradient_boosting.csv", index=False)
+    print(f"GridSearchCV del gradient boosting ({len(grid)} combinazioni, CV a 5 fold sul training set).")
+    print(f"Iperparametri migliori: {tuned.named_steps['model'].best_params_}")
+    print("Le 5 combinazioni migliori:")
+    print(grid.head().to_string(), "\n")
+
     model = clone(models[chosen]).fit(X_train, y_train)
     test_metrics = regression_metrics(y_test, model.predict(X_test))
-    baseline_metrics = regression_metrics(y_test, clone(models[BASELINE]).fit(X_train, y_train).predict(X_test))
-    print(pd.DataFrame({chosen: test_metrics, BASELINE: baseline_metrics}).T.to_string(), "\n")
+    # Metriche sul test set solo a titolo informativo: la scelta del modello è già stata fatta
+    test_table = {chosen: test_metrics}
+    if chosen != TUNED_GB:
+        test_table[TUNED_GB] = regression_metrics(y_test, tuned.predict(X_test))
+    test_table[BASELINE] = regression_metrics(y_test, clone(models[BASELINE]).fit(X_train, y_train).predict(X_test))
+    print("Valutazione sul test set:")
+    print(pd.DataFrame(test_table).T.to_string(), "\n")
 
     interval = prediction_interval(models[chosen], X_train, y_train, level=0.9, random_state=RANDOM_STATE)
     coverage = interval_coverage(y_test, model.predict(X_test), interval)

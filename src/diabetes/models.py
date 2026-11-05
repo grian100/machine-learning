@@ -10,11 +10,24 @@ import pandas as pd
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import ElasticNetCV, LassoCV, LinearRegression, RidgeCV
+from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
 ALPHAS = np.logspace(-3, 3, 61)
 BASELINE = "Baseline (media)"
+TUNED_GB = "Gradient boosting (GridSearchCV)"
+
+# Griglia degli iperparametri del gradient boosting: 2 x 2 x 3 x 2 = 24 combinazioni.
+# È volutamente contenuta: dentro la cross-validation di confronto ogni combinazione viene
+# addestrata 5 x 10 = 50 volte. Una prima ricerca più ampia (54 combinazioni, anche con
+# n_estimators=600 e learning_rate=0.01) non aveva dato risultati migliori.
+GB_PARAM_GRID = {
+    "n_estimators": [100, 300],
+    "learning_rate": [0.03, 0.1],
+    "max_depth": [1, 2, 3],
+    "min_samples_leaf": [5, 20],
+}
 
 
 def _linear(regressor, degree=1):
@@ -23,6 +36,23 @@ def _linear(regressor, degree=1):
         steps.append(("poly", PolynomialFeatures(degree, include_bias=False)))
     steps.append(("model", regressor))
     return Pipeline(steps)
+
+
+def tuned_gradient_boosting(random_state=42, param_grid=None, cv=5):
+    """Gradient boosting con iperparametri scelti da GridSearchCV.
+
+    La ricerca usa una cross-validation interna sui soli dati passati al fit: dentro la
+    cross-validation di confronto tra modelli diventa una nested cross-validation, quindi
+    il punteggio stimato non è ottimistico.
+    """
+    search = GridSearchCV(
+        GradientBoostingRegressor(subsample=0.8, random_state=random_state),
+        param_grid=GB_PARAM_GRID if param_grid is None else param_grid,
+        cv=KFold(n_splits=cv, shuffle=True, random_state=random_state),
+        scoring="neg_root_mean_squared_error",
+        n_jobs=-1,
+    )
+    return Pipeline([("model", search)])
 
 
 def build_models(random_state=42):
@@ -55,6 +85,7 @@ def build_models(random_state=42):
                 random_state=random_state,
             )),
         ]),
+        TUNED_GB: tuned_gradient_boosting(random_state),
     }
 
 
@@ -66,3 +97,12 @@ def linear_coefficients(pipeline, feature_names):
     """
     coef = pipeline.named_steps["model"].coef_
     return pd.Series(coef, index=feature_names, name="coefficiente").sort_values(key=abs, ascending=False)
+
+
+def grid_search_table(pipeline):
+    """Risultati della GridSearchCV di una pipeline fittata, dalla combinazione migliore alla peggiore."""
+    search = pipeline.named_steps["model"]
+    results = pd.DataFrame(search.cv_results_)
+    params = pd.json_normalize(results["params"])
+    table = params.assign(RMSE=-results["mean_test_score"], **{"RMSE std": results["std_test_score"]})
+    return table.sort_values("RMSE").reset_index(drop=True)

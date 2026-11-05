@@ -64,7 +64,7 @@ machine-learning/
 ```bash
 pip install -r requirements.txt
 python eda.py                          # analisi esplorativa, grafici in reports/
-python train.py                        # addestramento, valutazione ed esportazione in models/
+python train.py                        # addestramento, valutazione ed esportazione in models/ (circa 2-3 minuti)
 python predict.py                      # previsione su 5 pazienti di esempio
 python predict.py --csv pazienti.csv   # previsione su un file con le colonne age, sex, bmi, bp, s1-s6
 pytest                                 # test
@@ -80,7 +80,7 @@ Il notebook [`notebooks/risultati.ipynb`](notebooks/risultati.ipynb) è salvato 
 
 3. <strong>Pre-processing</strong>: non ci sono valori mancanti né variabili categoriche da codificare (`sex` è già binaria). Le variabili vengono standardizzate dentro la pipeline di ogni modello lineare: lo scaler è fittato solo sui dati di training di ogni fold ed esportato insieme al modello.
 
-4. <strong>Confronto dei modelli</strong>: cross-validation a 10 fold sul training set di dieci modelli, dalla baseline (che predice sempre la media) a regressione lineare, Ridge, Lasso, ElasticNet, polinomiali, random forest e gradient boosting. Gli iperparametri di Ridge, Lasso ed ElasticNet sono scelti con una cross-validation interna.
+4. <strong>Confronto dei modelli</strong>: cross-validation a 10 fold sul training set di undici modelli, dalla baseline (che predice sempre la media) a regressione lineare, Ridge, Lasso, ElasticNet, polinomiali, random forest e gradient boosting, anche con iperparametri ottimizzati da <strong>GridSearchCV</strong>. Gli iperparametri di Ridge, Lasso, ElasticNet e del gradient boosting ottimizzato sono scelti con una cross-validation interna ai soli dati di training di ogni fold (nested cross-validation), così il punteggio stimato non è ottimistico.
 
 5. <strong>Selezione delle variabili</strong>: la <strong>regressione Lasso</strong>, con penalità scelta in cross-validation, azzera i coefficienti delle variabili meno utili.
 
@@ -104,12 +104,28 @@ Il notebook [`notebooks/risultati.ipynb`](notebooks/risultati.ipynb) è salvato 
 | Polinomiale grado 2 + Ridge | 0.44 | 57.0 | 0.56 |
 | Random forest | 0.44 | 57.2 | 0.76 |
 | Gradient boosting | 0.45 | 56.7 | 0.69 |
+| Gradient boosting (GridSearchCV) | 0.46 | 55.7 | 0.66 |
 
 - I modelli lineari (con o senza regolarizzazione) sono equivalenti e non vanno in overfitting.
 - I <strong>polinomiali senza regolarizzazione</strong> sembrano migliori sui dati di training (fino a R² 0.92 con il grado 3), ma su dati nuovi sono peggiori: è overfitting. Valutarli sugli stessi dati usati per addestrarli porterebbe a scegliere il modello sbagliato.
-- Random forest e gradient boosting non migliorano i modelli lineari: con 442 pazienti la relazione è descritta bene da un modello lineare.
+- Random forest e gradient boosting non migliorano i modelli lineari, nemmeno con gli iperparametri ottimizzati: con 442 pazienti la relazione è descritta bene da un modello lineare.
 
 Il modello viene scelto con la <strong>regola di una deviazione standard</strong>: tra i modelli il cui RMSE è entro una deviazione standard dal migliore, il più semplice. Il modello scelto è la <strong>regressione lineare</strong>.
+
+### Gradient boosting ottimizzato con GridSearchCV
+La ricerca a griglia valuta 24 combinazioni di iperparametri con una cross-validation a 5 fold:
+
+| Iperparametro | Valori provati | Valore scelto |
+|---|---|---|
+| `n_estimators` | 100, 300 | 300 |
+| `learning_rate` | 0.03, 0.1 | 0.1 |
+| `max_depth` | 1, 2, 3 | 1 |
+| `min_samples_leaf` | 5, 20 | 20 |
+
+Una prima ricerca più ampia (54 combinazioni, anche con 600 alberi e `learning_rate` 0.01) aveva scelto gli stessi valori. Nella cross-validation di confronto la ricerca viene ripetuta dentro ogni fold (nested cross-validation). La tabella completa della griglia viene salvata da `train.py` in `reports/gridsearch_gradient_boosting.csv`.
+
+- L'ottimizzazione migliora il gradient boosting (R² da 0.45 a 0.46, con meno overfitting), ma non supera la regressione lineare (0.48); la differenza è molto inferiore a una deviazione standard.
+- La profondità scelta è 1: ogni albero usa una sola variabile, quindi il modello è <strong>additivo</strong> come la regressione lineare. Nei dati non ci sono interazioni rilevanti da sfruttare.
 
 ### Selezione delle variabili (Lasso)
 Con la penalità scelta in cross-validation, il Lasso conserva `bmi`, `s5`, `bp` e, con un peso minimo, `s6` (effetto positivo) e `s3`, `sex`, `s1` (effetto negativo), ed esclude `age`, `s2` e `s4`, la cui informazione è già contenuta nelle variabili correlate. `sex` ha correlazione quasi nulla con il target, ma a parità delle altre variabili ha un effetto rilevante: per questo non va esclusa a priori.
@@ -118,8 +134,11 @@ Con la penalità scelta in cross-validation, il Lasso conserva `bmi`, `s5`, `bp`
 
 | | R² | RMSE | MAE |
 |---|---|---|---|
-| Regressione lineare | 0.45 | 53.9 | 42.8 |
+| Regressione lineare (modello scelto) | 0.45 | 53.9 | 42.8 |
+| Gradient boosting (GridSearchCV) | 0.47 | 52.9 | 41.0 |
 | Baseline (media) | −0.01 | 73.2 | 64.0 |
+
+Sul test set il gradient boosting ottimizzato risulta leggermente migliore, ma con soli 89 pazienti la differenza è dentro la variabilità attesa, e la cross-validation su 353 pazienti indicava il contrario. Il modello è scelto prima di guardare il test set, che resta così una verifica indipendente: a parità di prestazioni si preferisce la regressione lineare, più semplice e interpretabile.
 
 L'intervallo di previsione al 90% va da −89 a +92 punti attorno alla previsione e contiene il 93% dei pazienti del test set.
 
