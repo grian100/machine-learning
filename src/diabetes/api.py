@@ -1,7 +1,7 @@
 """API REST per le previsioni della progressione del diabete.
 
-Avvio:
-    uvicorn diabetes.api:app --app-dir src
+Avvio, dalla cartella del progetto:
+    python -m uvicorn diabetes.api:app --app-dir src
 
 Documentazione interattiva su http://localhost:8000/docs.
 

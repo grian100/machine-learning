@@ -2,10 +2,10 @@
 Il progetto sviluppa un modello di regressione che, a partire dai dati clinici dei pazienti, prevede la progressione della malattia a un anno. Il modello è pensato come strumento di supporto per medici e specialisti, per personalizzare i piani terapeutici e monitorare meglio l'evoluzione del diabete nei pazienti a rischio.
 
 # Servizi e librerie utilizzati
-- <strong>Python==3.12.11</strong>
+- <strong>Python 3.10 o successivo</strong> (sviluppato con Python==3.12.11)
 - <strong>Scikit-learn==1.7.2</strong> è una libreria open source di apprendimento automatico per Python: contiene algoritmi di regressione, classificazione e clustering, oltre a strumenti per il pre-processing e la valutazione dei modelli
 - <strong>Pandas==2.3.3</strong> fornisce strutture dati veloci e flessibili per l'analisi di dati "relazionali" o "etichettati"
-- <strong>Numpy==2.3.3</strong> offre funzioni matematiche complete, generatori di numeri casuali, routine di algebra lineare e molto altro
+- <strong>Numpy 2.2–2.3</strong> offre funzioni matematiche complete, generatori di numeri casuali, routine di algebra lineare e molto altro
 - <strong>Matplotlib==3.10.6</strong> è una libreria completa per creare visualizzazioni statiche, animate e interattive
 - <strong>Seaborn==0.13.2</strong> è una libreria di visualizzazione basata su matplotlib, con un'interfaccia di alto livello per grafici statistici
 - <strong>FastAPI</strong> e <strong>Uvicorn</strong> per l'API REST, <strong>Joblib</strong> per l'esportazione del modello, <strong>pytest</strong> per i test e <strong>JupyterLab</strong> per il notebook dei risultati
@@ -63,13 +63,21 @@ machine-learning/
 ```
 
 # Utilizzo
+Dopo aver clonato il repository, dalla cartella del progetto si crea un ambiente virtuale e si installano le dipendenze. In PowerShell (Windows):
+```powershell
+git clone https://github.com/grian100/machine-learning.git
+cd machine-learning
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+Se PowerShell blocca l'attivazione ("l'esecuzione di script è disabilitata"), si può saltare quel passaggio e usare direttamente il Python dell'ambiente: `.venv\Scripts\python.exe -m pip install -r requirements.txt`, e allo stesso modo per gli altri comandi. Su Linux o macOS l'attivazione è `source .venv/bin/activate`. Tutti i comandi seguenti vanno eseguiti dalla cartella del progetto, con l'ambiente attivo:
 ```bash
-pip install -r requirements.txt
 python eda.py                          # analisi esplorativa, grafici in reports/
 python train.py                        # addestramento, valutazione ed esportazione in models/ (circa 2-3 minuti)
 python predict.py                      # previsione su 5 pazienti di esempio
 python predict.py --csv pazienti.csv   # previsione su un file con le colonne age, sex, bmi, bp, s1-s6
-uvicorn diabetes.api:app --app-dir src  # API REST su http://localhost:8000
+python -m uvicorn diabetes.api:app --app-dir src  # API REST su http://localhost:8000
 pytest                                 # test
 jupyter lab notebooks/risultati.ipynb  # notebook con i risultati
 ```
@@ -80,8 +88,10 @@ Il notebook [`notebooks/risultati.ipynb`](notebooks/risultati.ipynb) è salvato 
 Il modello esportato è disponibile anche come servizio web, così la piattaforma sanitaria può richiedere le previsioni via HTTP senza dipendere da Python:
 
 ```bash
-uvicorn diabetes.api:app --app-dir src --host 0.0.0.0 --port 8000
+python -m uvicorn diabetes.api:app --app-dir src --host 0.0.0.0 --port 8000
 ```
+
+Il comando va lanciato dalla cartella del progetto, con le dipendenze installate (vedi [Utilizzo](#utilizzo)). Si usa `python -m uvicorn` invece di `uvicorn` perché funziona anche quando la cartella degli eseguibili di Python non è nel PATH.
 
 La documentazione interattiva, generata automaticamente, è su `http://localhost:8000/docs`: permette di provare ogni endpoint dal browser.
 
